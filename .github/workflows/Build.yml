@@ -1,0 +1,54 @@
+# GitHub Actions Workflow for Building a C++ Solution
+name: C++ Build Pipeline
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  build-ubuntu:
+    runs-on: ubuntu-22.04
+
+    steps:
+      # Step 1: Checkout the code from the repository (without extra path)
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Install build tools and dependencies
+      - name: Install Build Tools
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake
+
+      # Step 3: Configure the project using CMake
+      - name: Configure CMake
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      # Step 4: Build the project using CMake
+      - name: Build the Project
+        run: |
+          cmake --build build --config Release
+
+  build-windows:
+    runs-on: windows-2022
+
+    steps:
+      # Step 1: Checkout the code from the repository (without extra path)
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Install CMake using Chocolatey
+      - name: Install CMake
+        run: choco install cmake -y
+
+      # Step 3: Configure the project using CMake
+      - name: Configure CMake
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      # Step 4: Build the project using CMake
+      - name: Build the Project
+        run: |
+          cmake --build build --config Release
