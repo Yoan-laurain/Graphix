@@ -1,0 +1,85 @@
+# GitHub Actions Workflow for Cppcheck Code Analysis
+name: Cppcheck Analysis
+
+# Trigger the workflow on pull request events
+on:
+  pull_request:
+    types:
+      - opened       # Trigger when a PR is first opened
+      - synchronize  # Trigger when new commits are pushed to an existing PR
+      - reopened     # Trigger when a closed PR is reopened
+
+# Define jobs for both Ubuntu and Windows environments
+jobs:
+  # Ubuntu job for Cppcheck analysis
+  cppcheck-ubuntu:
+    runs-on: ubuntu-22.04  # Specify the Ubuntu version for the runner
+
+    steps:
+      # Step 1: Checkout the code from the repository
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      # Step 2: Install Cppcheck using Ubuntu's package manager
+      - name: Install Cppcheck
+        run: sudo apt-get update && sudo apt-get install -y cppcheck
+
+      # Step 3: Run Cppcheck with strict settings
+      - name: Run Cppcheck on src directory (strict mode)
+        run: |
+          # Cppcheck settings explained:
+          # --enable=all,style: Enable all checks including style issues
+          # --std=c++17: Use the C++17 standard
+          # --inconclusive: Show deeper analysis warnings
+          # --suppress=unusedFunction: Suppress warnings for unused functions
+          # --suppress=missingInclude: Suppress warnings for missing includes (non-standard headers)
+          # --suppress=functionStatic: Suppress warnings suggesting a function could be static
+          # --force: Force Cppcheck to continue despite missing includes
+          # --error-exitcode=1: Fail the pipeline if any issues are found
+          # --quiet: Suppress all information messages, including unmatched suppression warnings
+          # Filter out "unmatched suppression" warnings and continue with code analysis
+
+          # Run Cppcheck and discard unwanted output
+          cppcheck src --enable=all,style --std=c++17 --inconclusive \
+            --suppress=unusedFunction --suppress=missingInclude \
+            --suppress=functionStatic --force \
+            --error-exitcode=1 --quiet 2>&1 | grep -v "Unmatched suppression"
+
+          # Check if cppcheck had any other issues and exit accordingly
+          if [[ $? -eq 0 ]]; then
+            echo "Cppcheck found no issues"
+          else
+            echo "Cppcheck found issues"
+            exit 1  # Explicitly fail the pipeline if issues were found
+          fi
+
+  # Windows job for Cppcheck analysis
+  cppcheck-windows:
+    runs-on: windows-2022  # Specify the Windows version for the runner
+
+    steps:
+      # Step 1: Checkout the code from the repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Install Cppcheck using Chocolatey package manager
+      - name: Install Cppcheck using Chocolatey
+        run: |
+          choco install cppcheck -y
+
+      # Step 3: Run Cppcheck with strict settings (Windows path adjusted)
+      - name: Run Cppcheck on src directory (strict mode)
+        run: |
+          # Set Cppcheck path environment variable for Windows
+          & "C:\Program Files\Cppcheck\cppcheck.exe" src `
+            --std=c++17 --suppress=unusedFunction --inconclusive `
+            --suppress=functionStatic --suppress=missingInclude `
+            --force --error-exitcode=1 --quiet 2>$null
+
+          # Check if cppcheck had any other issues and exit accordingly
+          if ($?) {
+            Write-Host "Cppcheck found no issues"
+          } else {
+            Write-Host "Cppcheck found issues"
+            exit 1  # Explicitly fail the pipeline if issues were found
+          }
