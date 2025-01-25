@@ -30,3 +30,8 @@
 *.exe
 *.out
 *.app
+
+CMakeUserPresets.json
+
+/.vs
+/.idea
