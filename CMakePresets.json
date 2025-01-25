@@ -1,0 +1,28 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "dev_vs22",
+      "displayName": "Windows Developer - VS 17 2022",
+      "description": "Developer build using Visual Studio 17 2022 generator",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/../build",
+      "architecture": {
+        "value": "x64",
+        "strategy": "set"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_STANDARD": "17",
+        "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+        "CMAKE_CXX_EXTENSIONS": "OFF",
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "configurePreset": "dev_vs22"
+    }
+  ]
+}
